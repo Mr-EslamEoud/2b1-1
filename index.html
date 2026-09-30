@@ -1665,6 +1665,45 @@
                 }
             };
 
+            // Keyboard navigation (ArrowLeft: التالي, ArrowRight: السابق)
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (showMap || isCanvasEnabled) return;
+                    if (e.key === 'ArrowLeft') handleNext();
+                    else if (e.key === 'ArrowRight') handlePrev();
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [currentIndex, showMap, isCanvasEnabled]);
+
+            // Touch swipe gesture (Right: السابق, Left: التالي)
+            const touchStartX = useRef(null);
+            const touchStartY = useRef(null);
+
+            const handleTouchStart = (e) => {
+                if (isCanvasEnabled || showMap) return;
+                touchStartX.current = e.touches[0].clientX;
+                touchStartY.current = e.touches[0].clientY;
+            };
+
+            const handleTouchEnd = (e) => {
+                if (isCanvasEnabled || showMap || touchStartX.current === null || touchStartY.current === null) return;
+                const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+                const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+
+                if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+                    if (deltaX > 0) {
+                        // التحريك يمين -> السابق
+                        handlePrev();
+                    } else {
+                        // التحريك يسار -> التالي
+                        handleNext();
+                    }
+                }
+                touchStartX.current = null;
+                touchStartY.current = null;
+            };
+
             const toggleFullScreen = () => {
                 if (!document.fullscreenElement) {
                     document.documentElement.requestFullscreen().catch(() => {});
@@ -1792,7 +1831,11 @@
                     )}
 
                     {/* Main content */}
-                    <main className="flex-1 relative overflow-hidden bg-white watermark-bg">
+                    <main 
+                        className="flex-1 relative overflow-hidden bg-white watermark-bg"
+                        onTouchStart={handleTouchStart}
+                        onTouchEnd={handleTouchEnd}
+                    >
                         <div 
                             className="absolute inset-0 overflow-y-auto content-scroll p-4 sm:p-8 pb-36 sm:pb-16 flex flex-col touch-pan-y"
                             style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}

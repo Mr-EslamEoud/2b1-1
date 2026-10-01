@@ -115,7 +115,7 @@
         @keyframes scaleUp { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         @keyframes slideInRight { 0% { transform: translateX(20px); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
         @keyframes slideInLeft { 0% { transform: translateX(-20px); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
-        @keyframes expandDown { 0% { max-height: 0; opacity: 0; overflow: hidden; } 100% { max-height: 500px; opacity: 1; overflow: visible; } }
+        @keyframes expandDown { 0% { max-height: 0; opacity: 0; } 100% { max-height: 4000px; opacity: 1; } }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
         @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
         @keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(360deg); opacity: 0; } }
@@ -1567,6 +1567,7 @@
             // Lifelines state
             const [eliminatedOptions, setEliminatedOptions] = useState({});
             const [activeHints, setActiveHints] = useState({});
+            const scrollContainerRef = useRef(null);
 
             const question = QUESTIONS_DATA[currentIndex];
 
@@ -1647,6 +1648,13 @@
                     setTimeout(() => setShowFeedbackBanner(false), 2200);
                 }
                 setSelectedAnswers({ ...selectedAnswers, [currentIndex]: index });
+                if (question.type === 'essay') {
+                    setTimeout(() => {
+                        if (scrollContainerRef.current) {
+                            scrollContainerRef.current.scrollBy({ top: 220, behavior: 'smooth' });
+                        }
+                    }, 150);
+                }
             };
 
             const handleNext = () => {
@@ -1837,10 +1845,11 @@
                         onTouchEnd={handleTouchEnd}
                     >
                         <div 
-                            className="absolute inset-0 overflow-y-auto content-scroll p-4 sm:p-8 pb-36 sm:pb-16 flex flex-col touch-pan-y"
+                            ref={scrollContainerRef}
+                            className="absolute inset-0 overflow-y-auto content-scroll p-4 sm:p-8 flex flex-col touch-pan-y"
                             style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
                         >
-                            <div className={`w-full max-w-4xl mx-auto flex-1 flex flex-col ${slideDir || 'animate-fade-in'}`}>
+                            <div className={`w-full max-w-4xl mx-auto min-h-full flex flex-col ${slideDir || 'animate-fade-in'}`}>
                                 <div className="bg-[#ebf0ff] border-r-8 border-primary rounded-2xl p-6 mb-4 shadow-sm relative">
                                     <h2 className="text-2xl sm:text-3xl font-black text-gray-900 leading-relaxed font-['Tajawal']">
                                         <FormattedText text={question.text} type="question" />
@@ -1953,7 +1962,7 @@
                                 </div>
 
                                 {hasAnsweredCurrent && question.explanation && (
-                                    <div className="mt-2 mb-6 bg-pink-50 border-2 border-secondary/40 rounded-2xl p-6 relative overflow-hidden animate-expand-down">
+                                    <div className="mt-2 mb-6 bg-pink-50 border-2 border-secondary/40 rounded-2xl p-6 relative animate-expand-down shadow-sm">
                                         <div className="absolute top-0 right-0 bg-secondary text-white px-4 py-1 rounded-bl-xl font-bold text-sm">
                                             التعليل والتحليل النموذجي
                                         </div>
@@ -1965,7 +1974,7 @@
 
                                 <div className="flex-1"></div>
 
-                                <div className="flex justify-between items-center mt-8 pt-5 pb-10 border-t border-gray-200 gap-3">
+                                <div className="flex justify-between items-center mt-8 pt-5 pb-4 border-t border-gray-200 gap-3 shrink-0">
                                     <button onClick={handlePrev} disabled={currentIndex === 0} className={`flex items-center justify-center gap-2 px-5 sm:px-7 py-3.5 sm:py-3 rounded-2xl border-2 font-bold text-base sm:text-lg min-w-[110px] sm:min-w-[130px] transition-all cursor-pointer ${currentIndex === 0 ? 'border-gray-200 text-gray-400 cursor-not-allowed opacity-50' : 'border-secondary text-secondary hover:bg-secondary hover:text-white shadow-sm active:scale-95'}`}>
                                         <i className="fa-solid fa-arrow-right"></i>
                                         <span>السابق</span>
@@ -1976,6 +1985,9 @@
                                         <i className="fa-solid fa-arrow-left"></i>
                                     </button>
                                 </div>
+
+                                {/* Safe Bottom Padding Buffer for Mobile */}
+                                <div className="h-28 sm:h-12 shrink-0 pointer-events-none"></div>
                             </div>
                         </div>
                     </main>
